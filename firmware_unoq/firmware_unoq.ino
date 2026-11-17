@@ -41,6 +41,7 @@
 #include "travas.hpp"
 #include "mpu.hpp"
 #include "desenharLed.hpp"
+#include "controle_rl.hpp"
 
 /* ─────────── PARAMETROS ─────────── */
 
@@ -109,6 +110,21 @@ char modoAtual() {
   }
 }
 
+/**
+ * @brief Retorna a identificação desta versão do firmware.
+ * 
+ * Permite que a aplicação em Python verifique qual firmware está 
+ * executando no microcontrolador (MCU).
+ * 
+ * @note Esta função é apenas de leitura e não altera o estado de 
+ * sensores, comandos ou motores.
+ * 
+ * @return String Texto identificador da versão do firmware (ex: "nikko-integracao-rl-01").
+ */
+String obterVersaoFirmware() {
+  return "nikko-integracao-rl-01";
+}
+
 /* ═══════════ SETUP / LOOP ═══════════ */
 
 void setup() {
@@ -118,6 +134,7 @@ void setup() {
 
   Bridge.begin();
   Bridge.provide("processa_direcao", processa_direcao);
+  Bridge.provide("versao_firmware", obterVersaoFirmware);
 
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
