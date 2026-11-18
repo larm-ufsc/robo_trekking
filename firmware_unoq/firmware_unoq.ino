@@ -136,6 +136,8 @@ void setup() {
   Bridge.provide("processa_direcao", processa_direcao);
   Bridge.provide("versao_firmware", obterVersaoFirmware);
 
+  Monitor.begin();
+
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
@@ -150,6 +152,30 @@ void setup() {
 
 void loop() {
   atualizarSonares();       // dado fresco antes de qualquer decisao
+  
+  const ObservacaoRL obs = montarObservacaoRL(
+      dist_1,  // frente
+      dist_3,  // esquerda
+      dist_2,  // direita
+      0.0f,    // tração aplicada no teste
+      0.0f     // direção aplicada no teste
+  );
+
+  static unsigned long ultimaImpressaoMs = 0;
+  const unsigned long agora = millis();
+
+  if (agora - ultimaImpressaoMs >= 500) {
+      ultimaImpressaoMs = agora;
+
+      Monitor.print("frente=");
+      Monitor.print(obs.frente, 3);
+      Monitor.print("  esquerda=");
+      Monitor.print(obs.esquerda, 3);
+      Monitor.print("  direita=");
+      Monitor.print(obs.direita, 3);
+      Monitor.print("  validos=");
+      Monitor.println(obs.sensoresValidos ? "sim" : "nao");
+  }
 
   const char modo = modoAtual();
 

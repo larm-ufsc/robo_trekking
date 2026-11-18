@@ -24,4 +24,42 @@ struct ObservacaoRL {
     bool sensoresValidos = false;
 };
 
+/**
+ * @brief Normaliza uma leitura de ultrassom para a escala usada no Webots.
+ * @param cm Distância medida em centímetros.
+ * @param[out] normalizada Referência à variável onde será armazenada
+ *             a distância dividida por 400, ou zero em caso de falha.
+ * @return true quando a leitura está entre 4 e 400 cm.
+ */
+inline bool normalizarDistanciaRL(float cm, float& normalizada) {
+    constexpr float alcanceCm = 400.0f;
+
+    if (cm >= 4.0f && cm <= alcanceCm) {
+        normalizada = cm / alcanceCm;
+        return true;
+    }
+
+    normalizada = 0.0f;
+    return false;
+}
+
+/**
+ * @brief Monta a observação com as três distâncias e os dois comandos suavizados.
+ * sensoresValidos só fica true quando os três sensores têm leituras válidas.
+ */
+inline ObservacaoRL montarObservacaoRL(float frenteCm, float esquerdaCm, float direitaCm,
+                                      float tracaoAplicada, float direcaoAplicada) {
+    ObservacaoRL obs;
+
+    const bool frenteValida   = normalizarDistanciaRL(frenteCm,   obs.frente);
+    const bool esquerdaValida = normalizarDistanciaRL(esquerdaCm, obs.esquerda);
+    const bool direitaValida  = normalizarDistanciaRL(direitaCm,  obs.direita);
+
+    obs.sensoresValidos = frenteValida && esquerdaValida && direitaValida;
+    obs.tracaoAplicada = tracaoAplicada;
+    obs.direcaoAplicada = direcaoAplicada;
+
+    return obs;
+}
+
 #endif
