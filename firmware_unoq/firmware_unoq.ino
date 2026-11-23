@@ -167,6 +167,13 @@ void loop() {
   if (agora - ultimaImpressaoMs >= 500) {
       ultimaImpressaoMs = agora;
 
+      Monitor.print("dist_1_cm=");
+      Monitor.print(dist_1, 1);
+      Monitor.print("  dist_3_cm=");
+      Monitor.print(dist_3, 1);
+      Monitor.print("  dist_2_cm=");
+      Monitor.print(dist_2, 1);
+      Monitor.print("  |  ");
       Monitor.print("frente=");
       Monitor.print(obs.frente, 3);
       Monitor.print("  esquerda=");

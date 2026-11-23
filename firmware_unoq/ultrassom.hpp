@@ -109,6 +109,14 @@ inline void atualizarSonares() {
   dist_3 = pronto[2] ? usParaCm(largura[2]) : INVALID_DISTANCE;
 
   ciclosSonar++;
+  if (ciclosSonar % 10 == 0) {
+    Monitor.print("ECHO_3  subiu=");
+    Monitor.print(subiu[2]);
+    Monitor.print("  pronto=");
+    Monitor.print(pronto[2]);
+    Monitor.print("  largura_us=");
+    Monitor.println(largura[2]);
+}
 // dist_4 = pronto[3] ? usParaCm(largura[3]) : INVALID_DISTANCE;
 }
 
