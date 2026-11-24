@@ -25,6 +25,27 @@ struct ObservacaoRL {
 };
 
 /**
+ * @brief Calcula o próximo comando por interpolação linear entre o atual e o alvo.
+ *
+ * @param atual Último comando aplicado.
+ * @param alvo Comando que se deseja atingir.
+ * @param fator Fração da diferença a percorrer nesta atualização, entre 0 e 1.
+ *              Com 0, mantém o valor atual. Com 1, chega ao alvo de uma vez.
+ * @return Novo comando interpolado.
+ */
+inline float lerpRL(float atual, float alvo, float fator) {
+    return atual + (alvo - atual) * fator;
+}
+
+/**
+ * @brief Guarda os últimos comandos suavizados de tração e direção do Nikko.
+ */
+struct ComandoRL {
+    float tracao = 0.0f;   ///< Tração normalizada entre 0 e 1.
+    float direcao = 0.0f;  ///< Direção normalizada entre -1 e 1. Zero é o centro.
+};
+
+/**
  * @brief Normaliza uma leitura de ultrassom para a escala usada no Webots.
  * @param cm Distância medida em centímetros.
  * @param[out] normalizada Referência à variável onde será armazenada

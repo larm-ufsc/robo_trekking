@@ -152,17 +152,23 @@ void setup() {
 
 void loop() {
   atualizarSonares();       // dado fresco antes de qualquer decisao
-  
+
+  static ComandoRL comando;
+
+  const unsigned long agora = millis();
+  static unsigned long atualizacaoAnteriorMs = agora;
+  const unsigned long intervaloMs = agora - atualizacaoAnteriorMs;
+  atualizacaoAnteriorMs = agora;
+
   const ObservacaoRL obs = montarObservacaoRL(
-      dist_1,  // frente
-      dist_3,  // esquerda
-      dist_2,  // direita
-      0.0f,    // tração aplicada no teste
-      0.0f     // direção aplicada no teste
+      dist_1,          // frente
+      dist_3,          // esquerda
+      dist_2,          // direita
+      comando.tracao,
+      comando.direcao
   );
 
   static unsigned long ultimaImpressaoMs = 0;
-  const unsigned long agora = millis();
 
   if (agora - ultimaImpressaoMs >= 500) {
       ultimaImpressaoMs = agora;
