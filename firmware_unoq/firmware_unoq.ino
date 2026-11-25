@@ -125,6 +125,50 @@ String obterVersaoFirmware() {
   return "nikko-integracao-rl-01";
 }
 
+/**
+ * @brief Imprime uma amostra dos sonares e dos comandos suavizados no monitor.
+ * @param obs Observação montada na volta atual do loop.
+ * @param tempoTesteMs Tempo em milissegundos desde o início do teste.
+ */
+void imprimirObservacaoRL(const ObservacaoRL& obs, unsigned long tempoTesteMs) {
+    Monitor.println();
+    Monitor.print("[NIKKO | ");
+    Monitor.print(tempoTesteMs);
+    Monitor.print(" ms]  Sensores: ");
+    Monitor.println(obs.sensoresValidos ? "OK" : "leitura invalida");
+
+    // Cada linha reúne o nome, a distância bruta e o valor normalizado do sonar.
+    const struct {
+        const char* nome;
+        float cm;
+        float normalizada;
+    } sonares[] = {
+        {"Frente  ", dist_1, obs.frente},
+        {"Esquerda", dist_3, obs.esquerda},
+        {"Direita ", dist_2, obs.direita}
+    };
+
+    for (const auto& sonar : sonares) {
+        Monitor.print("  ");
+        Monitor.print(sonar.nome);
+        Monitor.print("   ");
+
+        if (sonar.cm == INVALID_DISTANCE) {
+            Monitor.println("sem leitura valida");
+            continue;
+        }
+
+        Monitor.print(sonar.cm, 1);
+        Monitor.print(" cm    norm=");
+        Monitor.println(sonar.normalizada, 3);
+    }
+
+    Monitor.print("  Comando    tracao=");
+    Monitor.print(obs.tracaoAplicada, 4);
+    Monitor.print("    direcao=");
+    Monitor.println(obs.direcaoAplicada, 4);
+}
+
 /* ═══════════ SETUP / LOOP ═══════════ */
 
 void setup() {
@@ -156,9 +200,20 @@ void loop() {
   static ComandoRL comando;
 
   const unsigned long agora = millis();
+  static const unsigned long inicioTesteMs = agora;
   static unsigned long atualizacaoAnteriorMs = agora;
   const unsigned long intervaloMs = agora - atualizacaoAnteriorMs;
   atualizacaoAnteriorMs = agora;
+
+  constexpr double retencaoTracaoPorMs  = 0.9980019986673331;  // exp(-2.0 / 1000)
+  constexpr double retencaoDirecaoPorMs = 0.9960079893439915;  // exp(-4.0 / 1000)
+
+  const float fatorTracao  = fatorLerpRL(retencaoTracaoPorMs, intervaloMs);
+  const float fatorDirecao = fatorLerpRL(retencaoDirecaoPorMs, intervaloMs);
+
+  // Alvos do primeiro ensaio, iguais aos de test_action() no Webots
+  comando.tracao  = lerpRL(comando.tracao,  0.2f, fatorTracao);
+  comando.direcao = lerpRL(comando.direcao, -0.5f, fatorDirecao);
 
   const ObservacaoRL obs = montarObservacaoRL(
       dist_1,          // frente
@@ -172,22 +227,7 @@ void loop() {
 
   if (agora - ultimaImpressaoMs >= 500) {
       ultimaImpressaoMs = agora;
-
-      Monitor.print("dist_1_cm=");
-      Monitor.print(dist_1, 1);
-      Monitor.print("  dist_3_cm=");
-      Monitor.print(dist_3, 1);
-      Monitor.print("  dist_2_cm=");
-      Monitor.print(dist_2, 1);
-      Monitor.print("  |  ");
-      Monitor.print("frente=");
-      Monitor.print(obs.frente, 3);
-      Monitor.print("  esquerda=");
-      Monitor.print(obs.esquerda, 3);
-      Monitor.print("  direita=");
-      Monitor.print(obs.direita, 3);
-      Monitor.print("  validos=");
-      Monitor.println(obs.sensoresValidos ? "sim" : "nao");
+      imprimirObservacaoRL(obs, agora - inicioTesteMs);
   }
 
   const char modo = modoAtual();

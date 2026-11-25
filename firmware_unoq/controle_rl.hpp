@@ -38,6 +38,26 @@ inline float lerpRL(float atual, float alvo, float fator) {
 }
 
 /**
+ * @brief Calcula a fração da diferença até o alvo a percorrer nesta atualização.
+ * @param retencaoPorMs Fração da diferença que ainda resta após um milissegundo.
+ * @param intervaloMs Tempo desde a última atualização, em milissegundos.
+ * @return Fator entre 0 e 1 para usar em lerpRL().
+ */
+inline float fatorLerpRL(double retencaoPorMs, unsigned long intervaloMs) {
+    double restante = 1.0;
+
+    while (intervaloMs > 0) {
+        if (intervaloMs % 2 == 1) {
+            restante *= retencaoPorMs;
+        }
+        retencaoPorMs *= retencaoPorMs;
+        intervaloMs /= 2;
+    }
+
+    return static_cast<float>(1.0 - restante);
+}
+
+/**
  * @brief Guarda os últimos comandos suavizados de tração e direção do Nikko.
  */
 struct ComandoRL {
