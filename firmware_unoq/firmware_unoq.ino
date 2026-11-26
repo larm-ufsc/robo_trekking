@@ -65,6 +65,8 @@ volatile bool recebeuComando = false;   // separa "nunca recebeu" de "recebeu ha
  * String em estado compartilhado com a thread da Bridge e pedir problema. */
 volatile int  gradienteCone = 0;
 volatile char modoCamera    = '?';   // 'a', 'c', 'p'
+static float tracaoAlvoRL = 0.0f;
+static float direcaoAlvoRL = 0.0f;
 
 /* ═══════════ BRIDGE (CPU Linux -> MCU) ═══════════ */
 
@@ -126,6 +128,26 @@ String obterVersaoFirmware() {
 }
 
 /**
+ * @brief Guarda os alvos de tração e direção usados pelo lerp no ensaio.
+ * @param tracao Tração desejada, entre 0 e 1.
+ * @param direcao Direção desejada, entre -1 e 1.
+ * @return true se o par foi aceito. Se algum valor for inválido,
+ *         preserva os dois alvos anteriores e retorna false.
+ */
+bool definirAlvoRL(float tracao, float direcao) {
+    const bool tracaoValida = tracao >= 0.0f && tracao <= 1.0f;
+    const bool direcaoValida = direcao >= -1.0f && direcao <= 1.0f;
+
+    if (!tracaoValida || !direcaoValida) {
+        return false;
+    }
+
+    tracaoAlvoRL = tracao;
+    direcaoAlvoRL = direcao;
+    return true;
+}
+
+/**
  * @brief Imprime uma amostra dos sonares e dos comandos suavizados no monitor.
  * @param obs Observação montada na volta atual do loop.
  * @param tempoTesteMs Tempo em milissegundos desde o início do teste.
@@ -179,6 +201,7 @@ void setup() {
   Bridge.begin();
   Bridge.provide("processa_direcao", processa_direcao);
   Bridge.provide("versao_firmware", obterVersaoFirmware);
+  Bridge.provide_safe("definir_alvo_rl", definirAlvoRL);
 
   Monitor.begin();
 
@@ -211,9 +234,8 @@ void loop() {
   const float fatorTracao  = fatorLerpRL(retencaoTracaoPorMs, intervaloMs);
   const float fatorDirecao = fatorLerpRL(retencaoDirecaoPorMs, intervaloMs);
 
-  // Alvos do primeiro ensaio, iguais aos de test_action() no Webots
-  comando.tracao  = lerpRL(comando.tracao,  0.2f, fatorTracao);
-  comando.direcao = lerpRL(comando.direcao, -0.5f, fatorDirecao);
+  comando.tracao  = lerpRL(comando.tracao,  tracaoAlvoRL,  fatorTracao);
+  comando.direcao = lerpRL(comando.direcao, direcaoAlvoRL, fatorDirecao);
 
   const ObservacaoRL obs = montarObservacaoRL(
       dist_1,          // frente
@@ -277,3 +299,5 @@ void loop() {
 #endif
   atualizarLedModo(modo != 'x', modoCamera);
 }
+
+
